@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: golangk8s
+spec:
+  serviceName: "golangk8s"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: golangk8s
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: golangk8s
+      annotations:
+        pod.alpha.kubernetes.io/initialized: "true"
+
+    spec:
+      # soft antiaffinity for optimize placement
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - golangk8s
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: golangk8s
+        #image: 192.168.51.130:5000/uwebserverv6
+        #image: 172.16.155.136:5000/uwebserverv6
+        image: 172.16.155.136:5000/dockergolangvimgo:1.9.2
+        stdin: true
+        tty: true
+        ports:
+          - containerPort: 8000
+        resources:
+          limits:
+            cpu: 1
+            memory: 1024Mi
+          requests:
+            cpu: 1
+            memory: 1024Mi
+
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: hosttime
+        - mountPath: /cache
+          name: cache-volume
+      restartPolicy: Always
+
+        #terminationGracePeriodSeconds: 10
+
+      volumes:
+       - name: hosttime
+         hostPath:
+           path: /etc/localtime 
+       - name: cache-volume
+         emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: golangk8s
+  labels:
+    app: golangk8s
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    #port is loadbalancer port
+    port: 8001
+    # targetport is container port
+    targetPort: 8000
+  selector:
+    app: golangk8s
+
