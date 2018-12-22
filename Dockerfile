@@ -13,6 +13,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y vim-nox && \
 RUN git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 
+COPY kubectl /usr/bin/kubectl
 COPY vimrc /root/.vimrc
 RUN cd /go
 RUN echo -ne '\n' |vim +PluginInstall +qall
